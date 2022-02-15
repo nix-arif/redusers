@@ -61,8 +61,29 @@ app.get('/user/add', function (req, res, next) {
 });
 
 // Process Add User Page
-app.post('/user/add', function (req, res, next) {
+app.post('/user/add', async function (req, res, next) {
 	const { id, first_name, last_name, email, phone } = req.body;
+	try {
+		const reply = await client.HSET(id, [
+			'first_name',
+			first_name,
+			'last_name',
+			last_name,
+			'email',
+			email,
+			'phone',
+			phone,
+		]);
+	} catch (err) {
+		console.log(err);
+	}
+	res.redirect('/');
+});
+
+// Delete User
+app.delete('/user/delete/:id', function (req, res, next) {
+	client.del(req.params.id);
+	res.redirect('/');
 });
 
 app.listen(3000, () => console.log('Server listening on port 3000'));
