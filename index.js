@@ -3,12 +3,12 @@ const exphbs = require('express-handlebars');
 const path = require('path');
 const methodOverride = require('method-override');
 const redis = require('redis');
+const _ = require('lodash');
 
 // Create Redis Client
+const client = redis.createClient();
 
 (async () => {
-	const client = redis.createClient();
-
 	client.on('error', (err) => console.log('Redis Client Error', err));
 
 	client.on('connect', function () {
@@ -37,9 +37,32 @@ app.get('/', function (req, res, next) {
 });
 
 // Search processing
-app.post('/user/search', function (req, res, next) {
+app.post('/user/search', async function (req, res, next) {
 	let id = req.body.id;
-	console.log('ID', id);
+	try {
+		const obj = await client.hGetAll(id);
+
+		if (_.isEqual(obj, Object.create(null))) {
+			res.render('searchusers', {
+				error: 'User does not exist',
+			});
+		} else {
+			obj.id = id;
+			res.render('details', {
+				user: obj,
+			});
+		}
+	} catch (error) {}
+});
+
+// Add User Page
+app.get('/user/add', function (req, res, next) {
+	res.render('adduser');
+});
+
+// Process Add User Page
+app.post('/user/add', function (req, res, next) {
+	const { id, first_name, last_name, email, phone } = req.body;
 });
 
 app.listen(3000, () => console.log('Server listening on port 3000'));
